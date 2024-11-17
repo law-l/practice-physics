@@ -4,6 +4,7 @@ from util.model import Problem
 import gspread
 import pandas as pd
 import pytz
+import time
 import streamlit as st
 from oauth2client.service_account import ServiceAccountCredentials
 from streamlit_gsheets import GSheetsConnection
@@ -26,8 +27,15 @@ def _get_eastern_timestamp() -> str:
 
 def _load_worksheet(worksheet: str) -> pd.DataFrame:
     """Load worksheet from Google Sheet"""
-    conn = st.connection("gsheets", type=GSheetsConnection)
-    df = conn.read(worksheet=worksheet, ttl="10m")
+    is_success = False
+    while not is_success:
+        try:
+            conn = st.connection("gsheets", type=GSheetsConnection)
+            df = conn.read(worksheet=worksheet, ttl=0)
+            is_success = True
+        except:
+            time.sleep(1)
+                
     return df
 
 
@@ -40,11 +48,16 @@ def _append_row_to_worksheet(worksheet: str, record: list[str]):
 
     keyfile_dict = st.secrets.connections.gsheets.to_dict().copy()
 
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(keyfile_dict, scope)
-    client = gspread.authorize(creds)
-
-    sh = client.open("practice_physics").worksheet(worksheet)
-    sh.append_row(record)
+    is_success = False
+    while not is_success:
+        try:
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(keyfile_dict, scope)
+            client = gspread.authorize(creds)
+            sh = client.open("practice_physics").worksheet(worksheet)
+            sh.append_row(record)
+            is_success = True
+        except:
+            time.sleep(1)
 
 
 def is_valid_user_email(user_email: str) -> bool:
