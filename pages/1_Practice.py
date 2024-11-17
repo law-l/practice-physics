@@ -2,7 +2,7 @@ import streamlit as st
 
 from util.db import is_valid_user_email, get_topics, get_leaderboard, log_submission, sample_problem
 
-st.set_page_config(page_title="Practice", page_icon="✍🏼")
+st.set_page_config(page_title="Practice", page_icon="🧠")
 
 # initialize session_state
 if "is_reloaded" not in st.session_state or st.session_state["is_reloaded"]:
@@ -83,14 +83,14 @@ if "user_email" in st.session_state:
 
     # if the submit button has ever been clicked, display show solution button
     if st.session_state["is_submitted"]:
-        with col3:
+        with col2:
             is_solution_shown = st.toggle(label="Show solution", key="show_solution")
         if is_solution_shown:
             st.subheader("Solution")
             st.write(problem.explanation)
 
 
-    with col2:
+    with col3:
         # reload button
         if st.button("Reload"):
             st.session_state["is_submitted"] = False
