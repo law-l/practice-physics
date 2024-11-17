@@ -1,9 +1,11 @@
-from pydantic_core import from_json
-from pydantic import BaseModel
 import os
 
+from pydantic import BaseModel
+from pydantic_core import from_json
+
+
 class Problem(BaseModel):
-    id: str
+    id: int
     question: str
     option_1: str
     option_2: str
