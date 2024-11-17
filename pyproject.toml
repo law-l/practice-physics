@@ -6,7 +6,7 @@ authors = ["Lawrence Lai <lawrence.c.lai@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.10"
 flask = "^3.1.0"
 pydantic = "^2.9.2"
 openai = "^1.54.4"
@@ -16,6 +16,7 @@ st-gsheets-connection = "^0.1.0"
 oauth2client = "^4.1.3"
 isort = "^5.13.2"
 black = "^24.10.0"
+altair = "^5.4.1"
 
 
 [build-system]

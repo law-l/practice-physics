@@ -1,6 +1,6 @@
 import streamlit as st
 
-from util.db import is_valid_user_email, get_topics, log_submission, sample_problem
+from util.db import is_valid_user_email, get_topics, get_leaderboard, log_submission, sample_problem
 
 # initialize session_state
 if "is_reloaded" not in st.session_state or st.session_state["is_reloaded"]:
@@ -23,6 +23,8 @@ if "user_email" not in st.session_state:
             st.error(f"{user_email} does not have permission to access this app.")
 
 if "user_email" in st.session_state:
+    st.info(f"You are currently signed in as {st.session_state['user_email']}.")
+
     # pick a topic
     topic = st.selectbox("Topic", get_topics())
     if topic != st.session_state["topic"]:
@@ -33,7 +35,7 @@ if "user_email" in st.session_state:
     problem = st.session_state["problem"]
 
     # display question
-    st.subheader("Question")
+    st.subheader("Problem")
     st.write(f"[ID: {problem.id}] {problem.question}")
 
     # display options
@@ -48,7 +50,7 @@ if "user_email" in st.session_state:
     if not st.session_state["is_submitted"]:
         st.session_state["response"] = response
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
     # display submit button
     with col1:
@@ -56,7 +58,7 @@ if "user_email" in st.session_state:
             label="Submit",
             disabled=st.session_state["is_submitted"],
         )
-    with col3:
+    with col2:
         # reload button
         if st.button("Reload"):
             st.session_state["is_submitted"] = False
@@ -66,8 +68,8 @@ if "user_email" in st.session_state:
     # if the submit button has been clicked the first time, log submission
     if is_submitted and not st.session_state["is_submitted"]:
         log_submission(
+            problem=problem,
             user=st.session_state["user_email"],
-            problem_id=problem.id,
             correct=st.session_state["response"] == problem.answer,
         )
 
@@ -84,8 +86,25 @@ if "user_email" in st.session_state:
 
     # if the submit button has ever been clicked, display show solution button
     if st.session_state["is_submitted"]:
-        with col2:
-            is_solution_shown = st.toggle(label="Show solution")
+        with col3:
+            is_solution_shown = st.toggle(label="Show solution", key="show_solution")
         if is_solution_shown:
             st.subheader("Solution")
             st.write(problem.explanation)
+
+    # show leaderboard
+    with col4:
+        is_leaderboard_shown = st.toggle(label="Show leaderboard", key="show_leaderboard")
+    if is_leaderboard_shown:
+        st.subheader(f"Leaderboard for topic: {topic}")
+        st.caption("(sorted by percentage correct in descending order)")
+        st.bar_chart(
+            get_leaderboard(topic),
+            x="user_email",
+            x_label="",
+            y=["num_correct", "num_incorrect"],
+            y_label="",
+            color=["#a5d46a", "#ffa080"],
+            horizontal=True,
+            use_container_width=True,
+        )

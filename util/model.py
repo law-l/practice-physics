@@ -6,6 +6,7 @@ from pydantic_core import from_json
 
 class Problem(BaseModel):
     id: int
+    topic: str
     question: str
     option_1: str
     option_2: str

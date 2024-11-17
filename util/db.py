@@ -58,15 +58,13 @@ def sample_problem(topic: str) -> dict:
     """Randomly pick a problem based on a topic provided"""
     df = _load_worksheet(worksheet="problem")
     mask = df["topic"] == topic
-    df = df.drop(columns="topic")
     problem = Problem.model_validate(df.loc[mask, :].sample(n=1).to_dict(orient="records")[0])
     return problem
 
 
-def log_submission(user: str, problem_id: int, correct: bool):
+def log_submission(problem: Problem, user: str, correct: bool):
     """Log submission into activity worksheet"""
-
-    record = [user, problem_id, correct, _get_eastern_timestamp()]
+    record = [user, problem.topic, problem.id, correct, _get_eastern_timestamp()]
     _append_row_to_worksheet(worksheet="activity", record=record)
 
 
@@ -75,3 +73,51 @@ def get_topics() -> list[str]:
     df = _load_worksheet(worksheet="problem")
     topics = list(df["topic"].unique())
     return topics
+
+
+def get_leaderboard(topic: str) -> pd.DataFrame:
+    """Get a DataFrame for leaderboard"""
+    df = _load_worksheet(worksheet="activity")
+
+    # subset activity by selected topic
+    mask = df["topic"] == topic
+    df = df.loc[mask, :]
+
+    # count number of correct and incorrect attempts
+    df["num_correct"] = (df["is_correct"] == 1).astype(int)
+    df["num_incorrect"] = (df["is_correct"] == 0).astype(int)
+
+    # compute percentage of correct attempts
+    df = df.groupby(by=["user_email", "topic"])[["num_correct", "num_incorrect"]].sum().reset_index()
+    df["pct_correct"] = df["num_correct"]/(df["num_correct"]+df["num_incorrect"])
+
+    # compute ranking
+    df["rank"] = df["pct_correct"].rank(ascending = False).astype(int)
+    df = df.sort_values(by = "rank")
+
+    # # output final df
+    # keep_cols = ["#", "user_email", "pct_correct"]
+    # df = df.loc[:, keep_cols]
+    # df.style.bar(subset = ["pct_correct"], color = 'skyblue')
+
+    return df
+
+# def get_leaderboard(topic: str) -> pd.DataFrame:
+#     """Get a DataFrame for leaderboard"""
+#     df = _load_worksheet(worksheet="activity")
+
+#     # subset activity by selected topic
+#     mask = df["topic"] == topic
+#     df = df.loc[mask, :]
+
+#     df["count"] = 1
+#     df["result"] = df["is_correct"].map({1: "correct", 0: "incorrect"})
+
+#     # compute percentage of correct attempts
+#     df = df.groupby(by=["user_email", "result"])["timestamp"].nunique().reset_index().rename({"timestamp": "count"}, axis = 1)
+#     df["pct"] = df["count"]/df.groupby(by=["user_email"])["count"].transform("sum")
+#     mask = df["result"] == "correct"
+#     df.loc[mask, "pct_correct"] = df.loc[mask, "pct"]
+#     df = df.sort_values(by = "pct_correct", ascending = False)
+
+#     return df
