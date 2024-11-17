@@ -27,7 +27,7 @@ def _get_eastern_timestamp() -> str:
 def _load_worksheet(worksheet: str) -> pd.DataFrame:
     """Load worksheet from Google Sheet"""
     conn = st.connection("gsheets", type=GSheetsConnection)
-    df = conn.read(worksheet=worksheet, ttl="10m")
+    df = conn.read(worksheet=worksheet)
     return df
 
 
