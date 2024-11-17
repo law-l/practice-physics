@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "practice-physics"
+version = "0.1.0"
+description = ""
+authors = ["Lawrence Lai <lawrence.c.lai@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+flask = "^3.1.0"
+pydantic = "^2.9.2"
+openai = "^1.54.4"
+streamlit = "^1.40.1"
+ipykernel = "^6.29.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
