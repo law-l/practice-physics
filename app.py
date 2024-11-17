@@ -58,12 +58,7 @@ if "user_email" in st.session_state:
             label="Submit",
             disabled=st.session_state["is_submitted"],
         )
-    with col2:
-        # reload button
-        if st.button("Reload"):
-            st.session_state["is_submitted"] = False
-            st.session_state["is_reloaded"] = True
-            st.rerun()
+    
 
     # if the submit button has been clicked the first time, log submission
     if is_submitted and not st.session_state["is_submitted"]:
@@ -94,7 +89,8 @@ if "user_email" in st.session_state:
 
     # show leaderboard
     with col4:
-        is_leaderboard_shown = st.toggle(label="Show leaderboard", key="show_leaderboard")
+        is_leaderboard_shown = st.toggle(label="Show leaderboard", key="show_leaderboard", value=False)
+
     if is_leaderboard_shown:
         st.subheader(f"Leaderboard for topic: {topic}")
         st.caption("(sorted by percentage correct in descending order)")
@@ -108,3 +104,10 @@ if "user_email" in st.session_state:
             horizontal=True,
             use_container_width=True,
         )
+
+    with col2:
+        # reload button
+        if st.button("Reload"):
+            st.session_state["is_submitted"] = False
+            st.session_state["is_reloaded"] = True
+            st.rerun()
