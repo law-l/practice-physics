@@ -27,7 +27,7 @@ def _get_eastern_timestamp() -> str:
 def _load_worksheet(worksheet: str) -> pd.DataFrame:
     """Load worksheet from Google Sheet"""
     conn = st.connection("gsheets", type=GSheetsConnection)
-    df = conn.read(worksheet=worksheet)
+    df = conn.read(worksheet=worksheet, ttl=0)
     return df
 
 
@@ -95,29 +95,4 @@ def get_leaderboard(topic: str) -> pd.DataFrame:
     df["rank"] = df["pct_correct"].rank(ascending = False).astype(int)
     df = df.sort_values(by = "rank")
 
-    # # output final df
-    # keep_cols = ["#", "user_email", "pct_correct"]
-    # df = df.loc[:, keep_cols]
-    # df.style.bar(subset = ["pct_correct"], color = 'skyblue')
-
     return df
-
-# def get_leaderboard(topic: str) -> pd.DataFrame:
-#     """Get a DataFrame for leaderboard"""
-#     df = _load_worksheet(worksheet="activity")
-
-#     # subset activity by selected topic
-#     mask = df["topic"] == topic
-#     df = df.loc[mask, :]
-
-#     df["count"] = 1
-#     df["result"] = df["is_correct"].map({1: "correct", 0: "incorrect"})
-
-#     # compute percentage of correct attempts
-#     df = df.groupby(by=["user_email", "result"])["timestamp"].nunique().reset_index().rename({"timestamp": "count"}, axis = 1)
-#     df["pct"] = df["count"]/df.groupby(by=["user_email"])["count"].transform("sum")
-#     mask = df["result"] == "correct"
-#     df.loc[mask, "pct_correct"] = df.loc[mask, "pct"]
-#     df = df.sort_values(by = "pct_correct", ascending = False)
-
-#     return df
