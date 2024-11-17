@@ -2,6 +2,8 @@ import streamlit as st
 
 from util.db import is_valid_user_email, get_topics, get_leaderboard, log_submission, sample_problem
 
+st.set_page_config(page_title="Practice", page_icon="✍🏼")
+
 # initialize session_state
 if "is_reloaded" not in st.session_state or st.session_state["is_reloaded"]:
     st.session_state["topic"] = None
@@ -50,7 +52,7 @@ if "user_email" in st.session_state:
     if not st.session_state["is_submitted"]:
         st.session_state["response"] = response
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
 
     # display submit button
     with col1:
@@ -87,23 +89,6 @@ if "user_email" in st.session_state:
             st.subheader("Solution")
             st.write(problem.explanation)
 
-    # show leaderboard
-    with col4:
-        is_leaderboard_shown = st.toggle(label="Show leaderboard", key="show_leaderboard", value=False)
-
-    if is_leaderboard_shown:
-        st.subheader(f"Leaderboard for topic: {topic}")
-        st.caption("(sorted by percentage correct in descending order)")
-        st.bar_chart(
-            get_leaderboard(topic),
-            x="user_email",
-            x_label="",
-            y=["num_correct", "num_incorrect"],
-            y_label="",
-            color=["#a5d46a", "#ffa080"],
-            horizontal=True,
-            use_container_width=True,
-        )
 
     with col2:
         # reload button
