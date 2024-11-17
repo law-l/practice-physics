@@ -1,4 +1,5 @@
 from datetime import datetime
+from util.model import Problem
 
 import gspread
 import pandas as pd
@@ -26,7 +27,7 @@ def _get_eastern_timestamp() -> str:
 def _load_worksheet(worksheet: str) -> pd.DataFrame:
     """Load worksheet from Google Sheet"""
     conn = st.connection("gsheets", type=GSheetsConnection)
-    df = conn.read(worksheet=worksheet)
+    df = conn.read(worksheet=worksheet, ttl=0)
     return df
 
 
@@ -46,10 +47,19 @@ def _append_row_to_worksheet(worksheet: str, record: list[str]):
     sh.append_row(record)
 
 
-def sample_problem() -> dict:
-    """Randomly pick a problem"""
+def is_valid_user_email(user_email: str) -> bool:
+    """Check if a user email has permission to access the app"""
+    df = _load_worksheet(worksheet="user_email")
+    is_valid = user_email in set(df["user_email"].unique())
+    return is_valid
+
+
+def sample_problem(topic: str) -> dict:
+    """Randomly pick a problem based on a topic provided"""
     df = _load_worksheet(worksheet="problem")
-    problem = df.sample(n=1).to_dict(orient="records")[0]
+    mask = df["topic"] == topic
+    df = df.drop(columns="topic")
+    problem = Problem.model_validate(df.loc[mask, :].sample(n=1).to_dict(orient="records")[0])
     return problem
 
 
@@ -58,3 +68,10 @@ def log_submission(user: str, problem_id: int, correct: bool):
 
     record = [user, problem_id, correct, _get_eastern_timestamp()]
     _append_row_to_worksheet(worksheet="activity", record=record)
+
+
+def get_topics() -> list[str]:
+    """Get a list of available topics from problems"""
+    df = _load_worksheet(worksheet="problem")
+    topics = list(df["topic"].unique())
+    return topics
