@@ -1,12 +1,6 @@
 import streamlit as st
 
-from utils.db import (
-    get_leaderboard,
-    get_topics,
-    is_valid_user_email,
-    log_submission,
-    sample_problem,
-)
+from utils.db import get_topics, is_valid_user_email, log_submission, sample_problem
 
 st.set_page_config(page_title="Practice", page_icon="🧠")
 

@@ -8,7 +8,8 @@ import pytz
 import streamlit as st
 from oauth2client.service_account import ServiceAccountCredentials
 from streamlit_gsheets import GSheetsConnection
-from util.model import Problem
+
+from utils.model import Problem
 
 logger = logging.getLogger(__name__)
 
