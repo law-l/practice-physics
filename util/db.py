@@ -1,6 +1,7 @@
 from datetime import datetime
 from util.model import Problem
 
+import logging
 import gspread
 import pandas as pd
 import pytz
@@ -8,6 +9,9 @@ import time
 import streamlit as st
 from oauth2client.service_account import ServiceAccountCredentials
 from streamlit_gsheets import GSheetsConnection
+
+
+logger = logging.getLogger(__name__)
 
 
 def _get_eastern_timestamp() -> str:
@@ -31,9 +35,10 @@ def _load_worksheet(worksheet: str) -> pd.DataFrame:
     while not is_success:
         try:
             conn = st.connection("gsheets", type=GSheetsConnection)
-            df = conn.read(worksheet=worksheet, ttl=0)
+            df = conn.read(worksheet=worksheet, ttl="10m")
             is_success = True
-        except:
+        except Exception as e:
+            logger.info(f"exception: {e}")
             time.sleep(1)
                 
     return df
@@ -100,12 +105,25 @@ def get_leaderboard(topic: str) -> pd.DataFrame:
     df["num_correct"] = (df["is_correct"] == 1).astype(int)
     df["num_incorrect"] = (df["is_correct"] == 0).astype(int)
 
-    # compute percentage of correct attempts
-    df = df.groupby(by=["user_email", "topic"])[["num_correct", "num_incorrect"]].sum().reset_index()
-    df["pct_correct"] = df["num_correct"]/(df["num_correct"]+df["num_incorrect"])
+    # compute stats
+    df = (
+        df
+        .groupby(by=["user_email", "topic"])
+        .agg(
+            {"num_correct": "sum", "num_incorrect": "sum", "timestamp": "max"}
+        )
+        .reset_index()
+    )
+    df["point"] = (df["num_correct"]/(df["num_correct"]+df["num_incorrect"])*100).astype(int)
+    df["rank"] = df["point"].rank(ascending = False).astype(int)
 
-    # compute ranking
-    df["rank"] = df["pct_correct"].rank(ascending = False).astype(int)
-    df = df.sort_values(by = "rank")
+    # clean up
+    df = (
+        df
+        .sort_values(by="rank")
+        .filter(items=["rank", "user_email", "point", "timestamp"], axis=1)
+        .rename(columns={"rank": "Rank", "user_email": "User", "point": "Point", "timestamp": "Latest attempt"})
+    )
+
 
     return df
