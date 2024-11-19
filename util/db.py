@@ -130,19 +130,20 @@ def get_leaderboard(topic: str) -> pd.DataFrame:
     df["point"] = (df["num_correct"]/(df["num_correct"]+df["num_incorrect"])*100).astype(int)
     df["rank"] = df["point"].rank(ascending = False).astype(int)
     mask = df["num_consecutive_correct"] >= num_correct_attempts
-    df.loc[mask, "done"] = "✅"
+    df.loc[mask, "status"] = "🟢"
+    df.loc[~mask, "status"] = "🔴"
 
     # generate leaderboard
     df = (
         df
         .sort_values(by="rank")
-        .filter(items=["rank", "user_email", "point", "done", "timestamp"], axis=1)
+        .filter(items=["rank", "user_email", "point", "status", "timestamp"], axis=1)
         .rename(columns={
             "rank": "Rank", 
             "user_email": "User", 
             "point": "Point",
             "timestamp": "Latest attempt",
-            "done": "Done",
+            "status": "Status",
         })
         .fillna("")
     )
