@@ -23,8 +23,7 @@ if "user_email" not in st.session_state:
             st.rerun()
         else:
             st.error(f"{user_email} does not have permission to access this app.")
-
-if "user_email" in st.session_state:
+else:
     st.info(f"You are currently signed in as {st.session_state['user_email']}.")
 
     # pick a topic
