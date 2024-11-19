@@ -1,6 +1,12 @@
 import streamlit as st
 
-from util.db import is_valid_user_email, get_topics, get_leaderboard, log_submission, sample_problem
+from utils.db import (
+    get_leaderboard,
+    get_topics,
+    is_valid_user_email,
+    log_submission,
+    sample_problem,
+)
 
 st.set_page_config(page_title="Practice", page_icon="🧠")
 
@@ -42,7 +48,12 @@ else:
     # display options
     response = st.radio(
         label="Select your answer and click submit",
-        options=[problem.option_1, problem.option_2, problem.option_3, problem.option_4],
+        options=[
+            problem.option_1,
+            problem.option_2,
+            problem.option_3,
+            problem.option_4,
+        ],
         disabled=st.session_state["is_submitted"],
     )
 
@@ -59,7 +70,6 @@ else:
             label="Submit",
             disabled=st.session_state["is_submitted"],
         )
-    
 
     # if the submit button has been clicked the first time, log submission
     if is_submitted and not st.session_state["is_submitted"]:
@@ -87,7 +97,6 @@ else:
         if is_solution_shown:
             st.subheader("Solution")
             st.write(problem.explanation)
-
 
     with col3:
         # reload button

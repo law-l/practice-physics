@@ -1,6 +1,6 @@
-from util.db import get_topics, get_leaderboard, is_valid_user_email
-
 import streamlit as st
+
+from utils.db import get_leaderboard, get_topics, is_valid_user_email
 
 st.set_page_config(page_title="Leaderboard", page_icon="🏆")
 

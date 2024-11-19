@@ -1,15 +1,14 @@
-from datetime import datetime
-from util.model import Problem
-
 import logging
+import time
+from datetime import datetime
+
 import gspread
 import pandas as pd
 import pytz
-import time
 import streamlit as st
 from oauth2client.service_account import ServiceAccountCredentials
 from streamlit_gsheets import GSheetsConnection
-
+from util.model import Problem
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ def _load_worksheet(worksheet: str) -> pd.DataFrame:
         except Exception as e:
             logger.info(f"exception: {e}")
             time.sleep(1)
-                
+
     return df
 
 
@@ -56,7 +55,9 @@ def _append_row_to_worksheet(worksheet: str, record: list[str]):
     is_success = False
     while not is_success:
         try:
-            creds = ServiceAccountCredentials.from_json_keyfile_dict(keyfile_dict, scope)
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(
+                keyfile_dict, scope
+            )
             client = gspread.authorize(creds)
             sh = client.open("practice_physics").worksheet(worksheet)
             sh.append_row(record)
@@ -76,7 +77,9 @@ def sample_problem(topic: str) -> dict:
     """Randomly pick a problem based on a topic provided"""
     df = _load_worksheet(worksheet="problem")
     mask = df["topic"] == topic
-    problem = Problem.model_validate(df.loc[mask, :].sample(n=1).to_dict(orient="records")[0])
+    problem = Problem.model_validate(
+        df.loc[mask, :].sample(n=1).to_dict(orient="records")[0]
+    )
     return problem
 
 
@@ -109,44 +112,47 @@ def get_leaderboard(topic: str) -> pd.DataFrame:
     df = df.sort_values(by=["user_email", "topic", "timestamp"])
     num_correct_attempts = 5
     cols_to_sum = []
-    for num_shift in range(1, num_correct_attempts+1):
-        col = f'is_correct_shift_{num_shift}'
-        df[col] = df.groupby(by=["user_email", "topic"])['is_correct'].shift(num_shift)
+    for num_shift in range(1, num_correct_attempts + 1):
+        col = f"is_correct_shift_{num_shift}"
+        df[col] = df.groupby(by=["user_email", "topic"])["is_correct"].shift(num_shift)
         cols_to_sum.append(col)
     df["num_consecutive_correct"] = df[cols_to_sum].sum(axis=1)
 
     # aggregate by user and topic
     df = (
-        df
-        .groupby(by=["user_email", "topic"])
-        .agg({
-            "num_correct": "sum", 
-            "num_incorrect": "sum", 
-            "timestamp": "max",
-            "num_consecutive_correct": "max",
-        })
+        df.groupby(by=["user_email", "topic"])
+        .agg(
+            {
+                "num_correct": "sum",
+                "num_incorrect": "sum",
+                "timestamp": "max",
+                "num_consecutive_correct": "max",
+            }
+        )
         .reset_index()
     )
-    df["point"] = (df["num_correct"]/(df["num_correct"]+df["num_incorrect"])*100).astype(int)
-    df["rank"] = df["point"].rank(ascending = False).astype(int)
+    df["point"] = (
+        df["num_correct"] / (df["num_correct"] + df["num_incorrect"]) * 100
+    ).astype(int)
+    df["rank"] = df["point"].rank(ascending=False).astype(int)
     mask = df["num_consecutive_correct"] >= num_correct_attempts
     df.loc[mask, "status"] = "🟢"
     df.loc[~mask, "status"] = "🔴"
 
     # generate leaderboard
     df = (
-        df
-        .sort_values(by="rank")
+        df.sort_values(by="rank")
         .filter(items=["rank", "user_email", "point", "status", "timestamp"], axis=1)
-        .rename(columns={
-            "rank": "Rank", 
-            "user_email": "User", 
-            "point": "Point",
-            "timestamp": "Latest attempt",
-            "status": "Status",
-        })
+        .rename(
+            columns={
+                "rank": "Rank",
+                "user_email": "User",
+                "point": "Point",
+                "timestamp": "Latest attempt",
+                "status": "Status",
+            }
+        )
         .fillna("")
     )
-
 
     return df
