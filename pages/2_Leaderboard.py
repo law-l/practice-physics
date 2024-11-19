@@ -19,5 +19,4 @@ else:
     st.info(f"You are currently signed in as {st.session_state['user_email']}.")
     topic = st.selectbox("Topic", get_topics())
     st.subheader(f"Leaderboard for topic: {topic}")
-    st.caption("(sorted by the percentage of correct attempts in a descending order)")
     st.dataframe(get_leaderboard(topic), hide_index=True)

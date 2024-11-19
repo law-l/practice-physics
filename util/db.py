@@ -105,24 +105,46 @@ def get_leaderboard(topic: str) -> pd.DataFrame:
     df["num_correct"] = (df["is_correct"] == 1).astype(int)
     df["num_incorrect"] = (df["is_correct"] == 0).astype(int)
 
-    # compute stats
+    # compute number of consecutive correct attempts
+    df = df.sort_values(by=["user_email", "topic", "timestamp"])
+    num_correct_attempts = 5
+    cols_to_sum = []
+    for num_shift in range(1, num_correct_attempts+1):
+        col = f'is_correct_shift_{num_shift}'
+        df[col] = df.groupby(by=["user_email", "topic"])['is_correct'].shift(num_shift)
+        cols_to_sum.append(col)
+    df["num_consecutive_correct"] = df[cols_to_sum].sum(axis=1)
+
+    # aggregate by user and topic
     df = (
         df
         .groupby(by=["user_email", "topic"])
-        .agg(
-            {"num_correct": "sum", "num_incorrect": "sum", "timestamp": "max"}
-        )
+        .agg({
+            "num_correct": "sum", 
+            "num_incorrect": "sum", 
+            "timestamp": "max",
+            "num_consecutive_correct": "max",
+        })
         .reset_index()
     )
     df["point"] = (df["num_correct"]/(df["num_correct"]+df["num_incorrect"])*100).astype(int)
     df["rank"] = df["point"].rank(ascending = False).astype(int)
+    mask = df["num_consecutive_correct"] >= num_correct_attempts
+    df.loc[mask, "done"] = "✅"
 
-    # clean up
+    # generate leaderboard
     df = (
         df
         .sort_values(by="rank")
-        .filter(items=["rank", "user_email", "point", "timestamp"], axis=1)
-        .rename(columns={"rank": "Rank", "user_email": "User", "point": "Point", "timestamp": "Latest attempt"})
+        .filter(items=["rank", "user_email", "point", "done", "timestamp"], axis=1)
+        .rename(columns={
+            "rank": "Rank", 
+            "user_email": "User", 
+            "point": "Point",
+            "timestamp": "Latest attempt",
+            "done": "Done",
+        })
+        .fillna("")
     )
 
 
