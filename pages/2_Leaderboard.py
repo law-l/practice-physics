@@ -19,4 +19,8 @@ else:
     st.info(f"You are currently signed in as {st.session_state['user_email']}.")
     topic = st.selectbox("Topic", get_topics())
     st.subheader(f"Leaderboard for topic: {topic}")
-    st.dataframe(get_leaderboard(topic), hide_index=True)
+    df = get_leaderboard(topic)
+    if df.shape[0] == 0:
+        st.write("No activities found for the leaderboard!")
+    else:
+        st.dataframe(get_leaderboard(topic), hide_index=True)

@@ -100,6 +100,8 @@ def get_topics() -> list[str]:
 def get_leaderboard(topic: str) -> pd.DataFrame:
     """Get a DataFrame for leaderboard"""
     df = _load_worksheet(worksheet="activity")
+    if df.shape[0] == 0:
+        return df
 
     # subset activity by selected topic
     mask = df["topic"] == topic

@@ -90,8 +90,7 @@ else:
             is_solution_shown = st.toggle(label="Show solution", key="show_solution")
         if is_solution_shown:
             st.subheader("Solution")
-            solution = problem.explanation.replace(r"\n", "\n").replace(r"\\", "\\")
-            st.markdown(solution)
+            st.write(problem.explanation)
 
     with col3:
         # reload button
